@@ -1,25 +1,26 @@
 require 'gosu'
 
 class Cat
-  attr_accessor :x, :y, :hit, :direction
+  attr_accessor :x, :y, :hit, :direction, :speed
 
-  # SPEED = 5
+  SPEED = 2
 
-  def initialize(window, images, x, y, direction)
+  def initialize(window, images, x, y, direction, speed=nil)
     @window = window
     @images = images
     @x = x
     @y = y
     @direction = direction
     @hit = false
+    @speed = speed.nil? ? SPEED : speed
   end
 
   def update
     image = current_image
     if @direction == :left
-      @x -= 2
+      @x -= @speed
     else
-      @x += 2
+      @x += @speed
     end
 
     if @x + image.width < 0
@@ -94,11 +95,12 @@ class TheGameWindow < Gosu::Window
 
     @cats = [Cat.new(self, @cat_images, 200, 331, :right)]
 
-
-    @ground_level = 260
+    @ground_level = 262
     @hero_pos = [100, @ground_level]
     @hero_direction = :right
     @vv = 0
+
+    @start = Time.now
   end
 
   def button_down(button)
@@ -163,6 +165,14 @@ class TheGameWindow < Gosu::Window
       @current_hero_image = @hero_images[0]
     end
 
+    if Time.now - @start > 10
+      @cats.push Cat.new(self, @cat_images,
+                       rand(100..500), 331,
+                       [:left, :right].sample,
+                       rand(1..5))
+      @start = Time.now
+    end
+
     #handle_collisions
   end
 
@@ -174,10 +184,10 @@ class TheGameWindow < Gosu::Window
   def move(direction)
     @walking = true
     if direction == :right
-      @hero_pos[0] += 5
+      @hero_pos[0] += 4
       @hero_direction = :right
     else
-      @hero_pos[0] -= 5
+      @hero_pos[0] -= 4
       @hero_direction = :left
     end
   end
@@ -185,12 +195,11 @@ class TheGameWindow < Gosu::Window
   def jump
     return if @jumping
     @jumping = true
-    @vv = 30
+    @vv = 25
   end
 
   def handle_jump
-    gravity = 1.15
-    @ground_level = 255
+    gravity = 1.2
     @hero_pos = [@hero_pos[0], @hero_pos[1] - @vv]
 
     if @vv.round == 0

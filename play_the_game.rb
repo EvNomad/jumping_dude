@@ -95,7 +95,7 @@ class TheGameWindow < Gosu::Window
     @cats = [Cat.new(self, @cat_images, 200, 331, :right)]
 
 
-    @ground_level = 255
+    @ground_level = 260
     @hero_pos = [100, @ground_level]
     @hero_direction = :right
     @vv = 0

@@ -1,5 +1,65 @@
 require 'gosu'
 
+class Cat
+  attr_accessor :x, :y, :hit, :direction
+
+  # SPEED = 5
+
+  def initialize(window, images, x, y, direction)
+    @window = window
+    @images = images
+    @x = x
+    @y = y
+    @direction = direction
+    @hit = false
+  end
+
+  def update
+    image = current_image
+    if @direction == :left
+      @x -= 2
+    else
+      @x += 2
+    end
+
+    if @x + image.width < 0
+      @direction = :right
+    elsif @x > @window.width
+      @direction = :left
+    end
+  end
+
+  def draw
+    if @hit
+      change_direction
+    end
+    image = current_image
+
+    if @direction == :right
+      image.draw(@x, @y, 1)
+    else
+      image.draw(@x + image.width, @y, 1, -1)
+    end
+  end
+
+  def body
+    image = current_image
+    {:x => @x + 6,
+     :y => @y + 20,
+     :width => image.width - 12,
+     :height => image.height - 20}
+  end
+
+  def change_direction
+    @direction == :left ? @direction = :right : @direction == :left
+  end
+
+  def current_image
+    @images[(Gosu::milliseconds / 100 % 9)]
+  end
+
+end
+
 class TheGameWindow < Gosu::Window
   def initialize
     super(960, 480)
@@ -18,6 +78,23 @@ class TheGameWindow < Gosu::Window
     @current_hero_image = @hero_images.first
 
 
+
+    @cat_images = []
+    @cat_images << Gosu::Image.new('assets/cats/cat_0.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_1.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_2.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_3.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_4.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_5.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_6.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_7.png')
+    @cat_images << Gosu::Image.new('assets/cats/cat_8.png')
+
+    @cat_position = [200, 331]
+
+    @cats = [Cat.new(self, @cat_images, 200, 331, :right)]
+
+
     @ground_level = 255
     @hero_pos = [100, @ground_level]
     @hero_direction = :right
@@ -33,11 +110,15 @@ class TheGameWindow < Gosu::Window
     fy = self.height.to_f / @background_image.height.to_f
     @background_image.draw(0, 0, 0, fx, fy)
 
+    @cats.each{|cat| cat.draw}
+
     if @hero_direction == :right
       @current_hero_image.draw(@hero_pos[0], @hero_pos[1], 1)
     else
       @current_hero_image.draw(@hero_pos[0] + @current_hero_image.width, @hero_pos[1], 1, -1)
     end
+
+    #draw_collision_bodies
 
   end
 
@@ -56,6 +137,8 @@ class TheGameWindow < Gosu::Window
     jump if Gosu::button_down?(Gosu::KbUp)
 
     handle_jump if @jumping
+
+    @cats.each{|cat| cat.update}
 
     if @jumping
 
@@ -79,6 +162,8 @@ class TheGameWindow < Gosu::Window
       @hero_pos = [@hero_pos[0], @ground_level]
       @current_hero_image = @hero_images[0]
     end
+
+    #handle_collisions
   end
 
   def sit
